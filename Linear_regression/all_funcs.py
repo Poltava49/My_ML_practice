@@ -130,3 +130,9 @@ def looking_into_numeric_features(data, num_col):
         plt.xlabel(feature)
         plt.ylabel("Плотность")
         plt.title("Распределение основны кол-ых фичей")    
+
+#функция по добавлению результатов качества моделей
+def append_model_results(data, title, y_test, y_train, y_pred_train, y_pred):
+    data.loc[len(data)] = [title ,r2_score(y_train,y_pred_train), mean_squared_error(y_train,y_pred_train), 
+                           root_mean_squared_error(y_train,y_pred_train),r2_score(y_test,y_pred), 
+                           mean_squared_error(y_test,y_pred), root_mean_squared_error(y_test,y_pred)]
