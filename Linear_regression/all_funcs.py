@@ -23,11 +23,12 @@ def check_null(df):
     view_null = np.round(df.isna().sum().max()/df.shape[0] * 100)
     if view_null < 15:
         print(f"Доля {np.round(df.isna().sum().max()/df.shape[0] * 100)}% пропусков")
-        if df.dropna().shape[0] < df.shape[0]*0.85:
-             print('НО доля пропусков на тотале сильно больше 15%. Будем заполнять пропуски')
+        print(df.dropna().shape[0])
+        if df.dropna().shape[0] <= df.shape[0]*0.7:
+             print('НО доля пропусков на тотале больше 30%. Будем заполнять пропуски')
              return df
         else:
-            print('Доля пропусков на тотале меньше  20%. Удаляем пропуски')
+            print('Доля пропусков на тотале меньше  30%. Удаляем пропуски')
             return df.dropna()
     else:
         print('Меньше 20%')
@@ -136,3 +137,38 @@ def append_model_results(data, title, y_test, y_train, y_pred_train, y_pred):
     data.loc[len(data)] = [title ,r2_score(y_train,y_pred_train), mean_squared_error(y_train,y_pred_train), 
                            root_mean_squared_error(y_train,y_pred_train),r2_score(y_test,y_pred), 
                            mean_squared_error(y_test,y_pred), root_mean_squared_error(y_test,y_pred)]
+    
+
+
+
+def show_importance_feature_model(model, type_model):
+    if type_model == 'linear':
+        coefs = model['model'].coef_ 
+    elif type_model == 'tree':
+        coefs = model['model'].feature_importances_
+    feature = model['preprocessor'].get_feature_names_out()   
+    
+    if type_model == 'feature_selection':
+        mask = model['feature_selection'].get_support()
+        feature =  model['preprocessor'].get_feature_names_out()[mask]
+        coefs = model['model'].coef_  
+
+ 
+   
+    result = pd.DataFrame({
+    'feature': feature, 
+    'coefficient': pd.to_numeric(coefs),
+    'importance' : np.abs(coefs)
+    }).sort_values('importance', ascending=False)
+ 
+
+    top_10_features = result.head(10).sort_values('coefficient',ascending=False)
+
+
+    plt.figure(figsize=(10,6))
+    sns.barplot(data=top_10_features, x='coefficient', y='feature', 
+                palette=['green' if coef > 0 else 'red'  for coef in top_10_features['coefficient']])
+    plt.title('Распределение Топ-10 признаков в моделе в наибольшими весами')
+    plt.xlabel('Веса')
+    plt.ylabel('Признаки')
+    plt.show()
